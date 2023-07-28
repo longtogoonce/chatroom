@@ -5,11 +5,13 @@
 #include "Login_UI.hpp"
 #include "Friend_UI.hpp"
 #include "Group_UI.hpp"
+#include "../../Common/PutFormat.hpp"
 
 using namespace std;
 
 TcpSocket Socketfd;   //全局套接字
 Account Curuser;    //当前登陆用户
+PutFormat put;  //规范输出
 
 void Main_Menu(void)
 {
