@@ -27,7 +27,7 @@ int Login_Srv_Add(Account user)
     string temp = msg.tojson();
     Socketfd.sendMsg(temp);
     temp = Socketfd.recvMsg();
-    if(!temp.compare("T"))
+    if (!temp.compare("T"))
         return 1;
     else
         return 0;
