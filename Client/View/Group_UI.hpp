@@ -16,5 +16,7 @@ void Group_UI_initEntry();
 void Group_UI_MgtEntry();
 //群聊界面
 void Group_UI_ChatEntry();
+//查看群聊申请
+void Group_UI_QueryApply(string name);
 
 #endif
