@@ -1,6 +1,6 @@
 #ifndef LOGIN_UI_H_
 #define LOGIN_UI_H_
-    
+
 //登陆管理
 int SysLogin();
 
@@ -11,6 +11,6 @@ int Login();
 void Sign();
 
 //找回密码
-void FindPasswd();
+void FindPassword();
 
 #endif
