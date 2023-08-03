@@ -75,15 +75,15 @@ int Login()
     cin >> name;
     cout << "\n\t\t\t\t请输入你的密码:";
     cin >> passwd;
-    if(Login_Srv_Verify(name,passwd)){
+    int temp = Login_Srv_Verify(name, passwd);
+    if(temp == 1)
         return 1;
-    }
+    else if(!temp)
+        cout << "\n\t\t\t\t该用户已经登陆" << endl;
     else
-    {
-        cout << "\n\t\t登陆失败" << endl;
-        sleep(2);
-        return 0;
-    }
+        cout << "\n\t\t\t\t登陆失败" << endl;
+    put.stdexit();
+    return 0;
 }
 
 void Sign()
@@ -138,16 +138,7 @@ void Sign()
     cin >> myitbo;
     cout << endl;
     user.setmyitbo(myitbo);
-    
-    if (Login_Srv_Add(user))
-    {
-        cout << "\n\t\t\t\t\t\t\t恭喜你,账户创建成功,您的UID为:" << user.getUID() << endl;
-    }
-    else
-    {
-        cout << "\n\t\t\t\t\t\t\t账户创建失败!" << endl;
-    }
-    put.stdexit();
+    Login_Srv_Add(user);
 }
 
 void FindPassword()
