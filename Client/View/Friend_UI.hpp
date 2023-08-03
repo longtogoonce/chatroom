@@ -7,5 +7,7 @@
 void Friend_UI_MgtEntry();
 //聊天界面
 void Friend_UI_Chat();
+//查看好友申请
+void Friend_UI_QueryApply();
 
 #endif
