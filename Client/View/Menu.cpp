@@ -54,7 +54,7 @@ begin:
             break;
 		case 'G':
 		case 'g':
-			Group_UI_MgtEntry();
+			Group_UI_initEntry();
 			break;
         case 'D':
         case 'd':
