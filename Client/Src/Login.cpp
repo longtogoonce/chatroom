@@ -2,9 +2,11 @@
 #include "../../Common/Account.hpp"
 #include "../../Common/Message.hpp"
 #include "../../Common/TcpSocket.hpp"
+#include "../../Common/PutFormat.hpp"
 
 extern TcpSocket Socketfd;
 extern Account Curuser;
+extern PutFormat put;
 
 int Login_Srv_Verify(string name, string passwd)
 {
@@ -15,12 +17,13 @@ int Login_Srv_Verify(string name, string passwd)
     if(!temp.compare("T")){
         Curuser.setname(name);
         return 1;
-    }
-    else
+    }else if(!temp.compare("P"))
         return 0;
+    else
+        return -1;
 }
 
-int Login_Srv_Add(Account user)
+void Login_Srv_Add(Account user)
 {
     string data = user.tojson();
     Message msg(User_Creat, user.getname(), "", data);
@@ -28,9 +31,12 @@ int Login_Srv_Add(Account user)
     Socketfd.sendMsg(temp);
     temp = Socketfd.recvMsg();
     if (!temp.compare("T"))
-        return 1;
+        cout << "\n\t\t\t\t\t\t\t恭喜你,账户创建成功,您的UID为:" << user.getUID() << endl;
+    else if(!temp.compare("P"))
+        cout << "\n\t\t\t\t\t\t\t该用户账户已经存在,请重新注册" << endl;
     else
-        return 0;
+        cout << "\n\t\t\t\t\t\t\t账户创建失败,请重新注册" << endl;
+    put.stdexit();
 }
 
 int Login_Srv_FindPasswd(string name,string myitbo,string& passwd)
@@ -39,8 +45,10 @@ int Login_Srv_FindPasswd(string name,string myitbo,string& passwd)
     string temp = msg.tojson();
     Socketfd.sendMsg(temp);
     temp = Socketfd.recvMsg();
-    if(!temp.compare(myitbo))
+    if(!temp.compare(myitbo)){
+        passwd = temp;
         return 1;
+    }
     else
         return 0;
 }
