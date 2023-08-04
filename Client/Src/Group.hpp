@@ -23,5 +23,7 @@ void Group_Srv_Deluser(string name);
 void Group_Srv_AddManager(string name);
 //移除管理者
 void Group_Srv_DelManager(string name);
+//判断群是否存在，存在则获取群主
+string Group_Srv_isExists(string name);
 
 #endif
