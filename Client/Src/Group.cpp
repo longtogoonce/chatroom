@@ -4,17 +4,20 @@
 #include "../../Common/Account.hpp"
 #include "../../Common/Message.hpp"
 #include "../../Common/TcpSocket.hpp"
+#include "../../Common/PutFormat.hpp"
 
 using namespace std;
 extern TcpSocket Socketfd;
 extern Account Curuser;
+extern PutFormat put;
 
 //逻辑范式
 int result_Group(Protocol protocol,string Gname)
 {
     string name;
-    cout << "\n\t\t请输入名称:" << endl;
+    cout << "\n\t\t请输入名称:";
     cin >> name;
+    cout << endl;
 
     Message msg(protocol, Gname, "",Curuser.getname()+":"+name);
     string temp = msg.tojson();
@@ -31,8 +34,9 @@ int result_Group(Protocol protocol,string Gname)
 int result(Protocol protocol)
 {
     string name;
-    cout << "\n\t\t请输入名称:" << endl;
+    cout << "\n\t\t请输入名称:";
     cin >> name;
+    cout << endl;
 
     Message msg(protocol, Curuser.getname(), "", name);
     string temp = msg.tojson();
@@ -59,7 +63,7 @@ vector<string> Group_Srv_GetList(string key)
 
 vector<string> Group_Srv_GetApply(string name)
 {
-    Message msg(Packet_GetListAll,name, "", "");
+    Message msg(Packet_GetListAll,name+"Q", "", "");
     string temp = msg.tojson();
     Socketfd.sendMsg(temp);
     temp = Socketfd.recvMsg();
@@ -68,20 +72,33 @@ vector<string> Group_Srv_GetApply(string name)
     return data.get<vector<string>>();
 }
 
+string Group_Srv_isExists(string Gname)
+{
+    Message msg(Group_IsExist, Curuser.getname(), "", Gname);
+    string temp = msg.tojson();
+    Socketfd.sendMsg(temp);
+    temp = Socketfd.recvMsg();
+    return temp;
+}
+
 void Group_Srv_AddGroup()
 {
     string name;
-    cout << "\n\t\t请输入名称:" << endl;
+    cout << "\n\t\t请输入名称:";
     cin >> name;
+    cout << endl;
 
     Message msg(Packet_Apply, name, "", Curuser.getname());
     string temp = msg.tojson();
     Socketfd.sendMsg(temp);
     temp = Socketfd.recvMsg();
     if(!temp.compare("T"))
-        cout << "群申请已经发送成功" << endl;
+        cout << "\t\t群申请已经发送成功" << endl;
+    else if(!temp.compare("P"))
+        cout << "\t\t请输入正确的群名称" << endl;
     else
-        cout << "群申请发送失败" << endl;
+        cout << "\t\t群申请发送失败" << endl;
+    put.stdexit();
 }
 
 void Group_Srv_ExitGroup(string Gname)
@@ -92,59 +109,65 @@ void Group_Srv_ExitGroup(string Gname)
     Socketfd.sendMsg(temp);
     temp = Socketfd.recvMsg();
     if(!temp.compare("T"))
-        cout << "群退出成功" << endl;
+        cout << "\t\t群退出成功" << endl;
     else
-        cout << "群退出失败" << endl;
+        cout << "\t\t群退出失败" << endl;
+    put.stdexit();
 }
 
 void Group_Srv_CreatGroup()
 {
     if(result(Group_Creat))
-        cout << "群创建成功" << endl;
+        cout << "\t\t群创建成功" << endl;
     else
-        cout << "群创建失败" << endl;
+        cout << "\t\t群创建失败" << endl;
+    put.stdexit();
 }
 
 void Group_Srv_DelGroup(string Gname)
 {
   int reply = result_Group(Group_Delete,Gname);
     if(reply==1)
-        cout << "群解散成功" << endl;
-    if(!reply)
-        cout << "群解散失败" << endl;
+        cout << "\t\t群解散成功" << endl;
+    else if(!reply)
+        cout << "\t\t群解散失败" << endl;
     else
-        cout << "你没有操作权限" << endl;
+        cout << "\t\t你没有操作权限" << endl;
+    put.stdexit();
 }
 
 void Group_Srv_Deluser(string Gname)
 {
-    int reply = result_Group(Group_Exit,Gname);
+    int reply = result_Group(Group_ExitUser,Gname);
     if(reply==1)
-        cout << "用户删除成功" << endl;
-    if(!reply)
-        cout << "用户删除失败" << endl;
+        cout << "\t\t用户删除成功" << endl;
+    else if(!reply)
+        cout << "\t\t用户删除失败" << endl;
     else
-        cout << "你没有操作权限" << endl;
+        cout << "\t\t你没有操作权限" << endl;
+    put.stdexit();
 }
 
 void Group_Srv_AddManager(string Gname)
 {
     int reply = result_Group(Group_AddMan,Gname);
     if(reply==1)
-        cout << "用户添加管理员成功" << endl;
-    if(!reply)
-        cout << "用户添加管理员失败" << endl;
+        cout << "\t\t用户添加管理员成功" << endl;
+    else if(!reply)
+        cout << "\t\t用户添加管理员失败" << endl;
     else
-        cout << "你没有操作权限" << endl;
+        cout << "\t\t你没有操作权限" << endl;
+    put.stdexit();
 }
 
 void Group_Srv_DelManager(string Gname)
 {
     int reply = result_Group(Group_DelMan,Gname);
     if(reply==1)
-        cout << "撤销管理员成功" << endl;
-    if(!reply)
-        cout << "撤销管理员失败" << endl;
+        cout << "\t\t撤销管理员成功" << endl;
+    else if(!reply)
+        cout << "\t\t撤销管理员失败" << endl;
     else
-        cout << "你没有操作权限" << endl;
+        cout << "\t\t你没有操作权限" << endl;
+    put.stdexit();
 }
