@@ -9,47 +9,52 @@
 #include "../../Common/PutFormat.hpp"
 using namespace std;
 
-TcpSocket Socketfd;   //全局套接字
+extern TcpSocket Socketfd;   //全局套接字
 extern Account Curuser; //当前登陆用户
+extern PutFormat put;
 
 void Friend_UI_MgtEntry()
 {
-    vector<Friend> friends = Friend_Srv_GetAllstate();
     char choice;
     do{
+        vector<Friend> friends = Friend_Srv_GetAllstate();
         system("clear");
         cout << "\n\t\t===================================================================" << endl;
         cout << "\t\t************************ Friend Management ************************" << endl;
         cout << "\t\t==================================================================="<< endl;
         cout << "\t\t          好友名称          在线状态          拉黑状态        " << endl;
         for(auto& friend_obj:friends){
-            cout << "\t\t          " << friend_obj.getname() << "           " << 
-            friend_obj.getOnLinestate() << "           " << friend_obj.getBlackstate() << endl;
+            cout << "\t\t            " << friend_obj.getname() << "\t              ";
+            if(!friend_obj.getOnLinestate().compare("ON"))
+                cout << "\033[32;1m" << "ON" << "\033[0m";
+            else
+                cout << "\033[31;1m" << "OFF" << "\033[0m";
+            cout << "                 ";
+            if(!friend_obj.getBlackstate().compare("ON"))
+                cout << "\033[32;1m" << "ON" << "\033[0m"<< endl;
+            else 
+                cout << "\033[31;1m" << "OFF"  << "\033[0m" << endl;
         }
         cout << "\t\t-------------------------------------------------------------------" << endl;
-        cout << "\t\t[Q]好友查询" << endl;
         cout << "\t\t[A]好友添加" << endl;
         cout << "\t\t[D]好友删除" << endl;
         cout << "\t\t[B]拉黑好友" << endl;
         cout << "\t\t[C]好友聊天" << endl;
         cout << "\t\t[P]好友申请" << endl;
         cout << "\t\t[F]解除拉黑" << endl;
+        cout << "\t\t[E]退出" << endl;
         cout << "" << endl;
         cout << "\t\t==================================================================="<< endl;
-        cin >> choice;
-        switch(choice)
+        put.stdput(choice);
+        switch (choice)
         {
         case 'A':
         case 'a':
-            Friend_Srv_Add();
+            Friend_Srv_Apply();
             break;
         case 'D':
         case 'd':
             Friend_Srv_Delete();
-            break;
-        case 'Q':
-        case 'q':
-            Friend_Srv_Query();
             break;
         case 'B':
         case 'b':
@@ -59,17 +64,16 @@ void Friend_UI_MgtEntry()
         case 'c':
             Friend_UI_Chat();
             break;
-        case 'P':
         case 'p':
-            Friend_Srv_Apply();
+        case 'P':
+            Friend_UI_QueryApply();
             break;
         case 'F':
         case 'f':
             Friend_Srv_NoBlack();
             break;
         }
-
-    } while ('E'!= choice || 'e' != choice);
+    } while ('E'!= choice && 'e' != choice);
 }
 
 //在聊天的时候选择好友
@@ -87,7 +91,7 @@ void Friend_UI_Chat()
         string name = str.substr(0, pos);
         string data = str.substr(pos + 1);
 
-        if(name.compare(Curuser.getname()))
+        if(!name.compare(Curuser.getname()))
         {
             put.printFromRight(name,color_empty,B_empty,type_empty);
             put.printFromRight(data,black,B_white,highlight);
@@ -113,4 +117,27 @@ void Friend_UI_Chat()
         string temp = msg.tojson();
         Socketfd.sendMsg(temp);
     }
+}
+
+void Friend_UI_QueryApply()
+{
+    string choice;
+    vector<string> Query = Friend_Srv_GetApply();
+    if (!Query.size())
+    {
+        cout << "\n\t\t当前暂无好友验证消息" << endl;
+        put.stdexit();
+        return;
+    }
+
+    cout << "\n\t\t一共有" << Query.size() << "条好友申请:" << endl;
+    for(auto& str :Query){
+        cout << "\t\t" << str << "申请添加你为好友,[Yes/No]:";
+        cin >> choice;
+        cout << endl;
+        Message msg(Friend_ReApply, Curuser.getname(), str, choice);
+        string temp = msg.tojson();
+        Socketfd.sendMsg(temp);
+    }
+    put.stdexit();
 }
