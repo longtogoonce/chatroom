@@ -60,7 +60,7 @@ vector<string> Friend_Srv_Chat(string name)
 
 vector<string> Friend_Srv_GetApply()
 {
-    Message msg(Packet_GetListAll, Curuser.getname()+"Q", "", "");
+    Message msg(Packet_GetSetAll, Curuser.getname()+"Q", "", "");
     string temp = msg.tojson();
     Socketfd.sendMsg(temp);
     temp = msgQueue.pop();
@@ -84,6 +84,10 @@ void Friend_Srv_Apply()
         cout << "\t\t好友验证已经发送成功" << endl;
     else if(!temp.compare("P"))
         cout << "\t\t请输入正确的账户名称" << endl;
+    else if(!temp.compare("N"))
+        cout << "\t\t请不要拿自己的名字开玩笑" << endl;
+    else if(!temp.compare("E"))
+        cout << "\t\t正在等待对方的同意" << endl;
     else
         cout << "\t\t好友申请发送失败" << endl;
     put.stdexit();
