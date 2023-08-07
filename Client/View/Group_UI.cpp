@@ -9,7 +9,8 @@ using namespace std;
 
 extern Account Curuser;
 extern PutFormat put;
-extern TcpSocket Socketfd;  
+extern TcpSocket Socketfd;
+extern MessageQueue msgQueue;
 
 void Group_UI_initEntry()
 {
@@ -161,17 +162,64 @@ void Group_UI_QueryApply(string name)
 
     cout << "\n\t\t一共有" << Query.size() << "条群申请" << endl;
     for(auto& str :Query){
-        cout <<"\t\t"<<str << " 申请加入该群,[Yes/No]:";
+    do
+    {
+        cout << "\t\t" << str << "申请添加你为好友,[Yes/No]:";
         cin >> choice;
-        cout << endl;
-        Message msg(Group_ReApply, name, "", choice);
+        cout << "\033[F\033[K";
+        cout << "\033[F\033[K" << endl;
+    } while (choice.compare("Yes") && choice.compare("No"));
+
+        Message msg(Group_ReApply, name, str, choice);
         string temp = msg.tojson();
         Socketfd.sendMsg(temp);
+        temp = msgQueue.pop();
+        if(!temp.compare("T"))
+            cout << "\n\t\t快在" << str << "里一起聊天吧" << endl;
+        else
+            cout << "\n\t\t发送回复失败" << endl;
     }
     put.stdexit();
 }
 
 void Group_UI_ChatEntry()
 {
+     string name;
+    cout << "\n\t\t请输入名称:";
+    cin >> name;
+    cout << endl;
+    vector<string> history = Group_Srv_history(name);
 
+    system("clear");
+    for(auto& str :history){
+        auto pos = str.find(":");
+        string name = str.substr(0, pos);
+        string data = str.substr(pos + 1);
+
+        if(!name.compare(Curuser.getname()))
+        {
+            put.printFromRight(name,color_empty,B_empty,type_empty);
+            put.printFromRight(data,black,B_green,highlight);
+        }
+        else
+        {
+            put.printFromLeft(name,color_empty,B_empty,type_empty);
+            put.printFromLeft(data, black, B_white, highlight);
+        }
+    }
+    put.printFrommid("press [q] to exit", red, B_empty, underscore);
+
+    while(1){
+        string data;
+        getline(cin, data);
+        if(!data.compare("q"))
+            break;
+        cout << "\033[1A\033[K";
+        put.printFromRight(Curuser.getname(),color_empty,B_empty,type_empty);
+        put.printFromRight(data,black,B_white,highlight);
+
+        Message msg(Group_Chat, name, Curuser.getname(), data);
+        string temp = msg.tojson();
+        Socketfd.sendMsg(temp);
+    }
 }
