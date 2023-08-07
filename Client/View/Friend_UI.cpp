@@ -12,6 +12,7 @@ using namespace std;
 extern TcpSocket Socketfd;   //全局套接字
 extern Account Curuser; //当前登陆用户
 extern PutFormat put;
+extern MessageQueue msgQueue;
 
 void Friend_UI_MgtEntry()
 {
@@ -79,11 +80,11 @@ void Friend_UI_MgtEntry()
 //在聊天的时候选择好友
 void Friend_UI_Chat()
 {
-    PutFormat put;
     string name;
-    cout << "\n\t\t请输入名称:" << endl;
+    cout << "\n\t\t请输入名称:";
     cin >> name;
-    vector<string> history = Friend_Srv_Chat(name);
+    cout << endl;
+    vector<string> history = Friend_Srv_history(name);
 
     system("clear");
     for(auto& str :history){
@@ -94,15 +95,16 @@ void Friend_UI_Chat()
         if(!name.compare(Curuser.getname()))
         {
             put.printFromRight(name,color_empty,B_empty,type_empty);
-            put.printFromRight(data,black,B_white,highlight);
+            put.printFromRight(data,black,B_green,highlight);
         }
         else
         {
             put.printFromLeft(name,color_empty,B_empty,type_empty);
-            put.printFromLeft(data, black, B_purple, highlight);
+            put.printFromLeft(data, black, B_white, highlight);
         }
     }
     put.printFrommid("press [q] to exit", red, B_empty, underscore);
+    cout << endl;
 
     while(1){
         string data;
@@ -117,6 +119,10 @@ void Friend_UI_Chat()
         string temp = msg.tojson();
         Socketfd.sendMsg(temp);
     }
+    Message msg(Packet_exitchat, Curuser.getname(), "", "");
+    string temp = msg.tojson();
+    Socketfd.sendMsg(temp);
+    temp = msgQueue.pop();
 }
 
 void Friend_UI_QueryApply()
@@ -132,12 +138,22 @@ void Friend_UI_QueryApply()
 
     cout << "\n\t\t一共有" << Query.size() << "条好友申请:" << endl;
     for(auto& str :Query){
+    do
+    {
         cout << "\t\t" << str << "申请添加你为好友,[Yes/No]:";
         cin >> choice;
-        cout << endl;
-        Message msg(Friend_ReApply, Curuser.getname(), str, choice);
-        string temp = msg.tojson();
-        Socketfd.sendMsg(temp);
+        cout << "\033[F\033[K";
+        cout << "\033[F\033[K" << endl;
+    } while (choice.compare("Yes") && choice.compare("No"));
+
+    Message msg(Friend_ReApply, Curuser.getname(), str, choice);
+    string temp = msg.tojson();
+    Socketfd.sendMsg(temp);
+    temp = msgQueue.pop();
+    if (!temp.compare("T"))
+    cout << "\n\t\t快和" << str << "一起聊天吧" << endl;
+    else
+    cout << "\n\t\t发送回复失败" << endl;
     }
     put.stdexit();
 }
