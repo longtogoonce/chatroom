@@ -1,0 +1,4 @@
+/home/yuan/Work/mychatroom/build/CMakeFiles/client.dir
+/home/yuan/Work/mychatroom/build/CMakeFiles/server.dir
+/home/yuan/Work/mychatroom/build/CMakeFiles/edit_cache.dir
+/home/yuan/Work/mychatroom/build/CMakeFiles/rebuild_cache.dir

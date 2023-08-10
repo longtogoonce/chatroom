@@ -14,12 +14,11 @@ extern MessageQueue msgQueue;
 
 void Group_UI_initEntry()
 {
-    vector<string> Group_Creat = Group_Srv_GetList(Curuser.getname()+"C");     //我创建的群
-    vector<string> Group_Manager = Group_Srv_GetList(Curuser.getname()+"M");   //我管理的群
-    vector<string> Group_Add = Group_Srv_GetList(Curuser.getname()+"A");   //我加入的群
-
     char choice;
     do{
+        vector<string> Group_Creat = Group_Srv_GetList(Curuser.getname()+"C");     //我创建的群
+        vector<string> Group_Manager = Group_Srv_GetList(Curuser.getname()+"M");   //我管理的群
+        vector<string> Group_Add = Group_Srv_GetList(Curuser.getname()+"A");   //我加入的群
         system("clear");
         cout << "\n\t\t===================================================================" << endl;
         cout << "\t\t************************ Group Management *************************" << endl;
@@ -86,9 +85,9 @@ void Group_UI_MgtEntry()
         return;
     }
 
-    vector<string> Group_Manager = Group_Srv_GetList(name+"M");    //群的管理者
-    vector<string> Group_Add = Group_Srv_GetList(name+"A");    //群的成员
     do{
+        vector<string> Group_Manager = Group_Srv_GetList(name+"M");    //群的管理者
+        vector<string> Group_Add = Group_Srv_GetList(name+"A");    //群的成员
         system("clear");
         cout << "\n\t\t===================================================================" << endl;
         cout << "\t\t************************ Group Management ************************" << endl;
@@ -164,7 +163,7 @@ void Group_UI_QueryApply(string name)
     for(auto& str :Query){
     do
     {
-        cout << "\t\t" << str << "申请添加你为好友,[Yes/No]:";
+        cout << "\t\t" << str << "申请添加加入该群,[Yes/No]:";
         cin >> choice;
         cout << "\033[F\033[K";
         cout << "\033[F\033[K" << endl;
@@ -175,7 +174,7 @@ void Group_UI_QueryApply(string name)
         Socketfd.sendMsg(temp);
         temp = msgQueue.pop();
         if(!temp.compare("T"))
-            cout << "\n\t\t快在" << str << "里一起聊天吧" << endl;
+            cout << "\n\t\t快在" << name << "里一起聊天吧" << endl;
         else
             cout << "\n\t\t发送回复失败" << endl;
     }
@@ -184,11 +183,11 @@ void Group_UI_QueryApply(string name)
 
 void Group_UI_ChatEntry()
 {
-     string name;
+    string Gname;
     cout << "\n\t\t请输入名称:";
-    cin >> name;
+    cin >> Gname;
     cout << endl;
-    vector<string> history = Group_Srv_history(name);
+    vector<string> history = Group_Srv_history(Gname);
 
     system("clear");
     for(auto& str :history){
@@ -208,6 +207,7 @@ void Group_UI_ChatEntry()
         }
     }
     put.printFrommid("press [q] to exit", red, B_empty, underscore);
+    cout << endl;
 
     while(1){
         string data;
@@ -218,8 +218,12 @@ void Group_UI_ChatEntry()
         put.printFromRight(Curuser.getname(),color_empty,B_empty,type_empty);
         put.printFromRight(data,black,B_white,highlight);
 
-        Message msg(Group_Chat, name, Curuser.getname(), data);
+        Message msg(Group_Chat,Curuser.getname(),Gname, data);
         string temp = msg.tojson();
         Socketfd.sendMsg(temp);
     }
+    Message msg(Packet_exitchat, Curuser.getname(), "", "");
+    string temp = msg.tojson();
+    Socketfd.sendMsg(temp);
+    temp = msgQueue.pop();
 }

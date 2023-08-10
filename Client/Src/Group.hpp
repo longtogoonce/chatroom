@@ -25,5 +25,7 @@ void Group_Srv_AddManager(string name);
 void Group_Srv_DelManager(string name);
 //判断群是否存在，存在则获取群主
 string Group_Srv_isExists(string name);
+//获取历史记录
+vector<string> Group_Srv_history(string Gname);
 
 #endif

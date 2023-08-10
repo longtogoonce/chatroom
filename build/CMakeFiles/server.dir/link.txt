@@ -1,0 +1,1 @@
+/usr/bin/c++ CMakeFiles/server.dir/Server/Persistence/Friend.cpp.o CMakeFiles/server.dir/Server/Persistence/Group.cpp.o CMakeFiles/server.dir/Server/Src/Login.cpp.o CMakeFiles/server.dir/Server/Src/Server.cpp.o -o server  /usr/lib/libhiredis.so 

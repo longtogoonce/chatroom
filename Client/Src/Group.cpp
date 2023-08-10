@@ -12,28 +12,6 @@ extern Account Curuser;
 extern PutFormat put;
 extern MessageQueue msgQueue;
 
-//逻辑范式
-int result_Group(Protocol protocol,string Gname)
-{
-    string name;
-    cout << "\n\t\t请输入名称:";
-    cin >> name;
-    cout << endl;
-
-    Message msg(protocol, Gname, "",Curuser.getname()+":"+name);
-    string temp = msg.tojson();
-    Socketfd.sendMsg(temp);
-    temp = msgQueue.pop();
-    if(!temp.compare("T"))
-        return 1;
-    if(!temp.compare("P"))
-        return -1;
-    else
-        return 0;
-}
-
-//***************************************************************
-
 vector<string> Group_Srv_GetList(string key)
 {
     Message msg(Packet_GetSetAll, key, "","");
@@ -47,7 +25,18 @@ vector<string> Group_Srv_GetList(string key)
 
 vector<string> Group_Srv_GetApply(string name)
 {
-    Message msg(Packet_GetListAll,name+"Q", "", "");
+    Message msg(Packet_GetSetAll,name+"Q", "", "");
+    string temp = msg.tojson();
+    Socketfd.sendMsg(temp);
+    temp = msgQueue.pop();
+
+    json data = json::parse(temp);
+    return data.get<vector<string>>();
+}
+
+vector<string> Group_Srv_history(string Gname)
+{
+    Message msg(Packet_history, Curuser.getname(),"" , Gname);
     string temp = msg.tojson();
     Socketfd.sendMsg(temp);
     temp = msgQueue.pop();
@@ -87,8 +76,8 @@ void Group_Srv_AddGroup()
 
 void Group_Srv_ExitGroup(string Gname)
 {
-
-    Message msg(Group_Exit,Gname, "", Curuser.getname());
+  
+    Message msg(Group_Exit, Curuser.getname(), "",Gname);
     string temp = msg.tojson();
     Socketfd.sendMsg(temp);
     temp = msgQueue.pop();
@@ -119,25 +108,39 @@ void Group_Srv_CreatGroup()
 
 void Group_Srv_DelGroup(string Gname)
 {
-  int reply = result_Group(Group_Delete,Gname);
-    if(reply==1)
-        cout << "\t\t群解散成功" << endl;
-    else if(!reply)
-        cout << "\t\t群解散失败" << endl;
-    else
+
+    Message msg(Group_Delete, Curuser.getname(), "",Gname);
+    string temp = msg.tojson();
+    Socketfd.sendMsg(temp);
+    temp = msgQueue.pop();
+    if(!temp.compare("T"))
+        cout << "\t\t该群已经删除成功" << endl;
+    else if (!temp.compare("P"))
         cout << "\t\t你没有操作权限" << endl;
+    else
+        cout << "\t\t群删除失败" << endl;
     put.stdexit();
 }
 
 void Group_Srv_Deluser(string Gname)
 {
-    int reply = result_Group(Group_ExitUser,Gname);
-    if(reply==1)
-        cout << "\t\t用户删除成功" << endl;
-    else if(!reply)
-        cout << "\t\t用户删除失败" << endl;
-    else
+    string name;
+    cout << "\n\t\t请输入名称:";
+    cin >> name;
+    cout << endl;
+
+    Message msg(Group_ExitUser, Gname, "",Curuser.getname()+":"+name);
+    string temp = msg.tojson();
+    Socketfd.sendMsg(temp);
+    temp = msgQueue.pop();
+    if(!temp.compare("T"))
+        cout << "\t\t该用户删除成功" << endl;
+    else if (!temp.compare("P"))
         cout << "\t\t你没有操作权限" << endl;
+    else if(!temp.compare("F"))
+        cout << "\t\t你不能删除自己" << endl;
+    else
+        cout << "\t\t删除失败" << endl;
     put.stdexit();
 }
 
@@ -154,8 +157,10 @@ void Group_Srv_AddManager(string Gname)
     temp = msgQueue.pop();
     if(!temp.compare("T"))
         cout << "\t\t管理员添加成功" << endl;
-    if (!temp.compare("P"))
+    else if (!temp.compare("P"))
         cout << "\t\t你没有操作权限" << endl;
+    else if (!temp.compare("N"))
+        cout << "\t\t查无此人" << endl;
     else
         cout << "\t\t管理员添加失败" << endl;
     put.stdexit();
@@ -174,8 +179,10 @@ void Group_Srv_DelManager(string Gname)
     temp = msgQueue.pop();
     if(!temp.compare("T"))
         cout << "\t\t管理员撤销成功" << endl;
-    if (!temp.compare("P"))
+    else if (!temp.compare("P"))
         cout << "\t\t你没有操作权限" << endl;
+    else if (!temp.compare("N"))
+        cout << "\t\t查无此人" << endl;
     else
         cout << "\t\t管理员撤销失败" << endl;
     put.stdexit();

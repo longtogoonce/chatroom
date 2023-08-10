@@ -1,0 +1,1 @@
+/usr/bin/c++ CMakeFiles/client.dir/Client/Src/Friend.cpp.o CMakeFiles/client.dir/Client/Src/Group.cpp.o CMakeFiles/client.dir/Client/Src/Login.cpp.o CMakeFiles/client.dir/Client/View/Friend_UI.cpp.o CMakeFiles/client.dir/Client/View/Group_UI.cpp.o CMakeFiles/client.dir/Client/View/Login_UI.cpp.o CMakeFiles/client.dir/Client/View/Menu.cpp.o -o client 
