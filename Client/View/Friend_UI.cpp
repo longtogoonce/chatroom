@@ -85,8 +85,6 @@ void Friend_UI_Chat()
     cin >> name;
     cout << endl;
     vector<string> history = Friend_Srv_history(name);
-    if(history.empty())
-        return;
 
     system("clear");
     for(auto& str :history){
