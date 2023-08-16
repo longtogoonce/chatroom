@@ -21,6 +21,7 @@ using namespace std;
  *                  群成员--群name+A   (集合)
  *                 白名单--name+B  (集合)
  *                 好友--name+F   （集合）
+ *                 文件--name+L    (集合)
  */
 
 class Redis

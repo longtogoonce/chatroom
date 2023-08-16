@@ -1,11 +1,18 @@
 #include "Login.hpp"
 #include <iostream>
+#include "fstream"
+#include <sys/stat.h>
+#include "../../Common/File.hpp"
 #include "../../Common/Redis.hpp"
 #include "../../Common/TcpSocket.hpp"
 #include "../../Common/Account.hpp"
 #include <map>
+#include <string>
+
 extern Redis redis;
-extern map<string,pair<int,string>> Onlineuser;
+const string FILEPATH = "../My_File_Server";
+extern map<string, pair<int, string>> Onlineuser;
+extern map<int, string> Onlinefile;
 
 string verify(string name,string data)
 {
@@ -132,4 +139,52 @@ string exitchat(string name, string data="")
 {
     Onlineuser[name].second = "";
     return string("T");
+}
+
+string Recfile_info(string name, string data)
+{
+    //解析数据
+    auto pos = data.find(":");
+    string dest = data.substr(0, pos);
+    string info = data.substr(pos + 1);
+    File Curfile(info);
+    int fd = Onlineuser[name].first;
+    Onlinefile.insert(make_pair(fd,Curfile.getname()));
+    int type = redis.addSet(dest + "L", Curfile.getname());
+
+    //建立文件与目录
+    mkdir(FILEPATH.c_str(), 0777);
+    string filepath = FILEPATH + "/" + Curfile.getname();
+    ifstream stream(filepath);
+    if(!stream){
+        stream.close();
+        return string("T+0");
+    }
+    stream.seekg(0, std::ios::end);
+    int size = stream.tellg();
+    stream.close();
+    if (size < 0) {
+        return string("F");
+    }
+    if(size == Curfile.gettotalRecords())
+        return string("A");
+    return string("T+" + to_string(size));
+}
+
+string Sendfile_info(string name, string data)
+{
+    File file(data);
+    string filepath = FILEPATH + "/" + file.getname();
+    ifstream stream(filepath);
+    if(!stream){
+        stream.close();
+        return string("F");
+    }
+    stream.seekg(0, std::ios::end);
+    int size = stream.tellg();
+    stream.close();
+    if (size < 0) {
+        return string("F");
+    }
+    return string("FILE+" + to_string(size-file.gettotalRecords()));
 }

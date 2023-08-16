@@ -11,7 +11,7 @@ using namespace std;
  */
 
 //初始群界面
-void Group_UI_initEntry();      
+void Group_UI_initEntry();
 //群管理界面
 void Group_UI_MgtEntry();
 //群聊界面

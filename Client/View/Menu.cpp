@@ -1,4 +1,7 @@
+#include <fcntl.h>
 #include <iostream>
+#include <csignal>
+#include <fstream>
 #include "../Src/Login.hpp"
 #include "Login_UI.hpp"
 #include "Friend_UI.hpp"
@@ -6,6 +9,7 @@
 #include "../../Common/TcpSocket.hpp"
 #include "../../Common/Account.hpp"
 #include "../../Common/PutFormat.hpp"
+#include "../../Common/File.hpp"
 #include "../../Common/Message.hpp"
 #include <thread>
 using namespace std;
@@ -14,18 +18,14 @@ TcpSocket Socketfd;   //全局套接字
 PutFormat put;  //规范输出
 Account Curuser;    //当前登陆用户
 MessageQueue msgQueue; // 消息队列
+File RecFile;
+int RecState = 0;  // 服务器接受状态
 
 void ReadThreadFromeTcp();  //读线程
 
 void Main_Menu(void)
 {
-    /*
-        char *host = (char *)malloc(10);
-        gethostname(host, 10);
-    */
-
     //连接服务器，开始登陆
-    Socketfd.ConnectToHost(IP, 9000);
     thread ReadThread(ReadThreadFromeTcp);
     ReadThread.detach();
 
@@ -43,11 +43,11 @@ begin:
         cout << "" << endl;
         cout << "" << endl;
         cout << "" << endl;
-        cout << "" << endl;
         put.printFrommid2("                [F]riends               [G]roup                   ");
         cout << "" << endl;
         put.printFrommid2("                [D]elete Account        [E]xit                   ");
         cout << "" << endl;
+        put.printFrommid2("                [S]end File             [R]ecive File            ");
         cout << "" << endl;
         cout << "" << endl;
         put.printFrommid2("===================================================================");
@@ -55,8 +55,16 @@ begin:
         put.stdput(choice);
         switch (choice)
         {
-		case 'F':
-		case 'f':
+        case 'S':
+        case 's':
+            Send_File_MgtEntry();
+            break;
+        case 'R':
+        case 'r':
+            Recive_File_MgtEntry();
+            break;
+        case 'F':
+        case 'f':
             Friend_UI_MgtEntry();
             break;
 		case 'G':
@@ -73,8 +81,23 @@ begin:
     } while ('E' != choice && 'e' != choice);
 }
 
-int main()
+int main(int argc,char **argv)
 {
+
+    signal(SIGINT, SIG_IGN);
+    /*
+    if(argc !=3){
+        cout << "\t\t输入格式为: ./Client IP port " << endl;
+    }
+    char* endptr;
+    unsigned long data = std::strtoul(argv[2], &endptr, 10);
+    unsigned short port = static_cast<unsigned short>(data);
+    if(Socketfd.ConnectToHost(argv[1], port)<0){
+        cout << "\t\t请输入正确的IP与PORT" << endl;
+        return 0;
+    }
+    */
+    Socketfd.ConnectToHost(IP, 9000);
     Main_Menu();
     return 0;
 }
@@ -82,12 +105,24 @@ int main()
 void ReadThreadFromeTcp()
 {
     while(1){
+       if(RecState){
+        cout << "file:" << RecFile.getname() << endl;
+        Socketfd.recvFile(RecFile.getname(),RecFile.getoffset(),RecFile.gettotalRecords());
+        RecState = 0;
+        put.stdexit();
+       }
         string buf = Socketfd.recvMsg();
-        cout << "\n";
-        auto pos = buf.find(":");
-        string state = buf.substr(0, pos);
-        string data = buf.substr(pos + 1);
-        if(!state.compare("ON")){
+        if(!buf.substr(0,4).compare("FILE")){
+            RecState = 1;
+            auto pos = buf.find(":");
+            RecFile.settotal(buf.substr(pos + 1));
+            cout << "total:" << buf.substr(pos + 1) << endl;
+        } else {
+            cout << "\n";
+            auto pos = buf.find(":");
+            string state = buf.substr(0, pos);
+            string data = buf.substr(pos + 1);
+            if (!state.compare("ON")) {
             auto pos = data.find("+");
             string name = data.substr(0, pos);
             string msg = data.substr(pos + 1);
@@ -95,7 +130,8 @@ void ReadThreadFromeTcp()
             put.printFromLeft(msg, black, B_purple, highlight);
         }else if(!state.compare("OFF"))
             put.printFrommid("[ "+data+" ]", yellow, B_empty, highlight);
-        else
+        else 
             msgQueue.push(data);
+        }
     }
 }

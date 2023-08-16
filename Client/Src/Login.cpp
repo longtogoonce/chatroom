@@ -1,6 +1,10 @@
 #include <fcntl.h>
+#include <fstream>
 #include <iostream>
 #include <sys/sendfile.h>
+#include <unistd.h>
+#include <dirent.h>
+#include <sys/stat.h>
 #include "../../Common/Account.hpp"
 #include "../../Common/Message.hpp"
 #include "../../Common/File.hpp"
@@ -11,6 +15,7 @@ extern TcpSocket Socketfd;
 extern Account Curuser;
 extern PutFormat put;
 extern MessageQueue msgQueue;
+extern File RecFile;
 
 int Login_Srv_Verify(string name, string passwd)
 {
@@ -89,7 +94,6 @@ void Send_File(string file_path, string dest_name)
 
         string count = temp.substr(pos + 1);
         off_t offset = static_cast<off_t>(stoll(count));
-        cout << "\t\t文件开始发送" << endl;
 
         int fd = open(file_path.c_str(), O_RDONLY);
         if(fd == -1){
@@ -100,7 +104,8 @@ void Send_File(string file_path, string dest_name)
 
         while (offset< file.gettotalRecords()) {
             ssize_t sent_bytes = sendfile(Socketfd.getfd(), fd, &offset,file.gettotalRecords()-offset);
-            if(sent_bytes == -1){
+            offset += sent_bytes;
+            if (sent_bytes == -1) {
                 cout << "\t\t发送文件失败" << endl;
                 break;
             }
@@ -112,6 +117,8 @@ void Send_File(string file_path, string dest_name)
         close(fd);
     } else if(!state.compare("F"))
         cout << "\t\t请输入正确的名称" << endl;
+    else if(!state.compare("A"))
+        cout << "\t\t文件已经发送成功" << endl;
     else
         cout << "\t\t服务器发生错误" << endl;
     put.stdexit();
@@ -119,10 +126,47 @@ void Send_File(string file_path, string dest_name)
 
 void Recive_File(string file_name)
 {
-    Message msg(Packet_recivefile, Curuser.getname(), "", file_name);
+    //创建用户存储目录
+    string dir = "../" + Curuser.getname() + "_File_Client";
+    mkdir(dir.c_str(), 0777);
+
+    //判断文件是否存在,并计算偏移量
+    off_t offset;
+    string filepath = dir + "/" + file_name;
+
+    ifstream input(filepath);
+    off_t size = 0;
+    if (input.is_open()) {
+        input.seekg(0, std::ios::end);
+        size = input.tellg();
+        input.close();
+    }
+    File file(file_name, size, size);
+    RecFile.setname(filepath);
+    RecFile.setoffset(size);
+    string data = file.tojson();
+
+    //发送接受文件包
+    Message msg(Packet_recivefile, Curuser.getname(), "", data);
     string temp = msg.tojson();
     Socketfd.sendMsg(temp);
-    return;
+/*
+    temp = msgQueue.pop();
+    auto pos = temp.find("+");
+    string state = temp.substr(0, pos);
+    if (!state.compare("T")) {
+        
+        string count = temp.substr(pos + 1);
+        if(!count.compare(to_string(offset)))
+              cout << "\t\t该文件已经存在" << endl;
+        else{
+            
+            cout << "\t\t准备开始接受文件" << endl;
+        
+    } else
+        cout << "\t\t该文件不存在" << endl;
+    put.stdexit();
+    */
 }
 
 vector<std::string> getfiles()

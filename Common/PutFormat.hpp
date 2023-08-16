@@ -69,6 +69,7 @@ public:
     }
     void stdput(char &);  //规范输出模式
     void stdexit();     //用户退出
+    void printprogress(float progress);   //打印进度条
     void getCursorPosition();       // 获取当前位置
     void moveCursorToNextLine();    //移动到下一行
 
@@ -97,14 +98,35 @@ inline void PutFormat::stdput(char &choice){
     while (true)
     {
         cin >> ws >> line;
+        if(cin.eof()){
+            cin.clear();
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+            continue;
+        }
         if (line.length() == 1)
              break;
-        //cin.clear();
+        cin.clear();
         cin.ignore(numeric_limits<streamsize>::max(), '\n');     
         cout << "\033[F\033[K"; // 返回上一行并清空该行
     }
     choice = line.c_str()[0];
     cout << "\033[F\033[K"; // 返回上一行并清空该行
+}
+
+inline void PutFormat::printprogress(float progress)
+{
+    const int width = 50;
+    int bars = static_cast<int>(progress * width);
+    
+    std::cout << "\t\t\t\t[";
+    for (int i = 0; i < width; ++i) {
+        if (i < bars) {
+            std::cout << "#";
+        } else {
+            std::cout << ".";
+        }
+    }
+    std::cout << "] " << static_cast<int>(progress * 100) << "%" << std::endl;
 }
 
 inline void PutFormat::stdexit()

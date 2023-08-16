@@ -1,13 +1,16 @@
 #include <iostream>
 #include "Login_UI.hpp"
+#include <string>
 #include "../Src/Login.hpp"
 #include "../../Common/Account.hpp"
 #include "../../Common/PutFormat.hpp"
+#include "../../Common/File.hpp"
 #include <limits>
 #include <unistd.h>
 
 using namespace std;
 extern PutFormat put;
+extern File RecFile;
 // 系统登陆
 int SysLogin()
 {
@@ -155,8 +158,8 @@ void FindPassword()
         cout << "" << endl;
         cout << "" << endl;
         cout << "" << endl;
-        cout << "\t\t\t\t\t   __| | ___  _ __ | |_( ) |_   / _| ___  _ __ __ _  ___ | |_" << std::endl;
-        cout << "\t\t\t\t\t  / _` |/ _ \\| '_ \\| __|/| __| | |_ / _ \\| '__/ _` |/ _ \\| __|" << std::endl;
+        cout << "\t\t\t\t\t   __| | ___  _ __ | |_( ) |_   / _| ___  _ __ __ _  ___ | |_" <<std::endl;
+        cout << "\t\t\t\t\t  / _` |/ _ \\| '_ \\| __|/| __| | |_ / _ \\| '__/ _` |/ _ \\| __|"<<std::endl;
         cout << "\t\t\t\t\t | (_| | (_) | | | | |_  | |_  |  _| (_) | | | (_| | (_) | |_" << std::endl;
         cout << "\t\t\t\t\t  \\__,_|\\___/|_| |_|\\__|  \\__| |_|  \\___/|_|  \\__, |\\___/ \\__|" << std::endl;
         cout << "\t\t\t\t\t                                                |___/" << std::endl;
@@ -179,4 +182,80 @@ void FindPassword()
         cout << "\n\t\t\t\t验证失败" << endl;
         }
         put.stdexit();
+}
+
+void Send_File_MgtEntry()
+{
+    string file_path;
+    string dest_name;
+
+     system("clear");
+     cout << "\n" << endl;
+     put.printFrommid2("===================================================================");
+     put.printFrommid2("*********************** xiaotian's chatroom ***********************");
+     put.printFrommid2("===================================================================");
+     cout << "" << endl;
+     cout << "" << endl;
+     cout << "" << endl;
+     cout << "\t\t\t\t\t  ____                 _    __ _ _    " << std::endl;
+     cout << "\t\t\t\t\t / ___|  ___ _ __   __| |  / _(_) | ___" << std::endl;
+     cout << "\t\t\t\t\t \\___ \\ / _ \\ '_ \\ / _` | | |_| | |/ _ \\" << std::endl;
+     cout << "\t\t\t\t\t  ___) |  __/ | | | (_| | |  _| | |  __/" << std::endl;
+     cout << "\t\t\t\t\t |____/ \\___|_| |_|\\__,_| |_| |_|_|\\___|" << std::endl;
+     cout << "" << endl;
+     cout << "" << endl;
+     cout << "" << endl;
+     cout << "" << endl;
+     put.printFrommid2("===================================================================");
+     do {
+        cout << "\t\t\t\t请输入文件名称:";
+        cin.ignore();
+        cin >> file_path;
+        cout << "\033[F\033[K";
+        cout << "\033[F\033[K" << endl;
+     } while (access(file_path.c_str(), F_OK));
+     cout << "\t\t\t\t请输入发送的对象:";
+     cin >> dest_name;
+     cout << endl;
+     Send_File(file_path,dest_name);
+}
+
+void Recive_File_MgtEntry()
+{
+     string filename;
+        system("clear");
+        cout << "\n" << endl;
+        put.printFrommid2("===================================================================");
+        put.printFrommid2("*********************** xiaotian's chatroom ***********************");
+        put.printFrommid2("===================================================================");
+        cout << "" << endl;
+        cout << "" << endl;
+        cout << "\t\t\t\t\t  ____           _              __ _ _      \n";
+        cout << "\t\t\t\t\t |  _ \\ ___  ___(_)_   _____   / _(_) | ___ \n";
+        cout << "\t\t\t\t\t | |_) / _ \\/ __| \\ \\ / / _ \\ | |_| | |/ _ \\\n";
+        cout << "\t\t\t\t\t |  _ <  __/ (__| |\\ V /  __/ |  _| | |  __/\n";
+        cout << "\t\t\t\t\t |_| \\_\\___|\\___|_| \\_/ \\___| |_| |_|_|\\___|\n";
+        cout << "" << endl;
+        cout << "" << endl;
+        cout << "" << endl;
+        put.printFrommid2("===================================================================");
+        vector<string> files = getfiles();
+        if (!files.size()){
+            cout << "\n\t\t当前暂无接受到文件" << endl;
+            put.stdexit();
+            return;
+        }
+        for(auto ptr : files){
+            put.printFrommid2("File Name: " + ptr);
+        }
+        put.printFrommid2("-------------------------------------------------------------------");
+        cout << "\t\t\t\t请输入你想接受的文件名称:";
+        cin >> filename;
+        auto it = find(files.begin(), files.end(), filename);
+        if(it == files.end()){
+            cout << "\t\t\t\t请输入正确的文件名称" << endl;
+            put.stdexit();
+            return;
+        }
+        Recive_File(filename);
 }

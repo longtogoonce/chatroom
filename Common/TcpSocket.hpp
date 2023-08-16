@@ -6,10 +6,13 @@
 #include <string>
 #include <stdlib.h>
 #include <arpa/inet.h>
+#include <sys/sendfile.h>
 #include <string.h>
 #include <iostream>
+#include <fstream>
 #include <fcntl.h>
 #include <errno.h>
+#include <sys/stat.h>
 #define IP "127.0.0.1"
 
 using namespace std;
@@ -25,8 +28,11 @@ public:
     void toNoBlack();
     int ConnectToHost(string ip, unsigned short port);
     int sendMsg(string msg);
+    void sendFile(string filepath,off_t offset);
     string recvMsg();
-    
+    void recvFile(string filepath,off_t offset,off_t total);
+    void recvFile2(string filepath);
+
     int getfd(){
         return socketfd;
     }
@@ -83,6 +89,28 @@ inline int TcpSocket::sendMsg(string msg)
     return ret;
 }
 
+inline void TcpSocket::sendFile(string filepath,off_t offset)
+{
+    int fd = open(filepath.c_str(), O_RDONLY);
+    if (fd == -1) {
+        cout << "\t\t打开文件失败" << endl;
+        return;
+    }
+     struct stat file_stat;
+     if (stat(filepath.c_str(), &file_stat) == -1) {
+         cout << "Error getting file information." << endl;
+     }
+     off_t total = file_stat.st_size;
+
+     while (offset < total) {
+         off_t sent_bytes = sendfile(socketfd, fd, &offset, total - offset);
+         if (sent_bytes == -1) {
+             cout << "\t\t发送文件失败" << endl;
+             break;
+         }
+    }
+}
+
 inline string TcpSocket::recvMsg()
 {
     // 接收数据
@@ -104,6 +132,39 @@ inline string TcpSocket::recvMsg()
     return retStr;
 }
 
+inline void TcpSocket::recvFile(string filepath,off_t offset,off_t total)
+{
+    ofstream putfile(filepath, ios::app);
+    if (!putfile) {
+        cout << "\t\t\t\t无法创建文件" << endl;
+    }
+  //接受文件
+    char buff[10240];
+    ssize_t byte;
+    while(offset < total){
+        byte = recv(socketfd, buff, sizeof(buff), 0);
+        cout << "byte:" << byte << endl;
+        putfile.write(buff, byte);
+        offset += total;
+    }
+    putfile.close();
+    
+}
+
+inline void TcpSocket::recvFile2(string filepath){
+    ofstream putfile(filepath, ios::app);
+    if (!putfile) {
+        cout << "\t\t\t\t无法创建文件" << endl;
+    }
+    //接受文件
+    char buff[10240];
+    ssize_t byte;
+    while( (byte = recv(socketfd,buff,sizeof(buff),0))>0){
+        putfile.write(buff, byte);
+    }
+    putfile.close();
+}
+
 inline int TcpSocket::readn(char* buf, int size)
 {
     int nread = 0;
@@ -119,7 +180,7 @@ inline int TcpSocket::readn(char* buf, int size)
         }
         else if (nread == -1)
         {
-            cout << "Rerrno:" << strerror(errno) << endl;
+            //cout << "Rerrno:" << strerror(errno) << endl;
             return -1;
         }
     }

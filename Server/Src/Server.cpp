@@ -6,8 +6,10 @@
 #include "../../Common/ThreadPool.hpp"
 #include "../../Common/Message.hpp"
 #include "../../Common/Redis.hpp"
+#include "../../Common/File.hpp"
 
 Redis redis;
+const string FILEPATH = "../My_File_Server";
 
 int main()
 {   
@@ -71,7 +73,7 @@ int main()
                 epoll_ctl(epfd, EPOLL_CTL_ADD,New->getfd(), &ev);
 
             }
-            else if(evs[i].events & EPOLLRDHUP){
+            else if(evs[i].events & EPOLLRDHUP) {
                  close(fd);
                  epoll_ctl(epfd, EPOLL_CTL_DEL, fd, NULL);
 
@@ -96,12 +98,39 @@ void WorkProcess(void *arg)
     int *temp = (int *)arg;
     int src = temp[0];
     TcpSocket tcp1(src);
+    if (Onlinefile.find(src) != Onlinefile.end()){
+        string filename = Onlinefile[src];
+        string filepath = FILEPATH + "/" + filename;
+        cout << "file:" << filepath <<endl;
+        tcp1.recvFile2(filepath);
+        Onlinefile.erase(src);
+        return;
+    }
+
     string buf = tcp1.recvMsg();
     Message msg(buf);
 
     // 判断是数据转发还是任务处理
-    if(msg.getprotocol()==Friend_Chat||msg.getprotocol()==Group_Chat){
+    if(msg.getprotocol()==Packet_recivefile){
+        cout << "protocol: " << msg.getprotocol() << " name: " << msg.getname()
+             << " Fname: " << msg.getdest() << " data: " << msg.getdata()
+             << endl;
+        // 判读用户是否有接受文件的权限
+        string data = msg.getdata();
+        File file(data);
+        string filepath = FILEPATH + "/" + file.getname();
+        ifstream stream(filepath);
+        if(!stream){
+            stream.close();
+            tcp1.sendMsg("F");
+        }else{
+            stream.seekg(0, std::ios::end);
+            tcp1.sendMsg("FILE:" + to_string(stream.tellg()));
+            tcp1.sendFile(filepath, file.gettotalRecords());
+        }
 
+    } else if (msg.getprotocol() == Friend_Chat ||
+               msg.getprotocol() == Group_Chat) {
         string key;
         vector<string> number;
         if(msg.getprotocol()==Friend_Chat){
@@ -125,7 +154,6 @@ void WorkProcess(void *arg)
                 int dest = Onlineuser[ptr].first;
                 TcpSocket tcp(dest);
                 string name = Onlineuser[msg.getdest()].second; // 当前用户正在通信的用户
-                cout << "Curname:" << name << endl;
                 if (!name.compare(msg.getname()))
                      tcp.sendMsg("ON:" + msg.getname() + "+" + msg.getdata());
                 else
@@ -133,13 +161,12 @@ void WorkProcess(void *arg)
             }
         }
         //既有任务的处理又有对不同身份人的消息发送
-    }else if (msg.getprotocol()<10){
-
+    } else if (msg.getprotocol() < 10) {
         vector<string> number;
         cout << "protocol: " << msg.getprotocol() << " name: " << msg.getname() << " Fname: " << msg.getdest() << " data: " << msg.getdata() << endl;
         string result = funcMap[msg.getprotocol()](msg.getname(), msg.getdest()+":"+msg.getdata());
         cout << "return :" << result << endl;
-        tcp1.sendMsg(result);
+        tcp1.sendMsg(":"+result);
 
         if (redis.isSet("Groups", msg.getdest()) && msg.getprotocol() == Packet_Apply)
             number = getGroupadmin(msg.getdest());
@@ -151,7 +178,6 @@ void WorkProcess(void *arg)
             if (Onlineuser.find(ptr) != Onlineuser.end() && !result.compare("T"))
             {
                 int dest = Onlineuser[ptr].first;
-                cout << "the dest is " << ptr << endl;
                 TcpSocket tcp2(dest);
                 switch (msg.getprotocol())
                 {
@@ -170,12 +196,13 @@ void WorkProcess(void *arg)
                 case Group_ReApply:
                      tcp2.sendMsg("OFF:" + msg.getname() + " has approved your membership");
                      break;
+                case Packet_sendfile:
+                    tcp2.sendMsg("OFF: " + msg.getname() + "sent you a file");
                 }
             }
         }
         //单纯的任务处理
-    }else{
-
+    } else {
         cout << "protocol: " << msg.getprotocol() << " name: " << msg.getname() << " data: " << msg.getdata() << endl;
         string result = funcMap[msg.getprotocol()](msg.getname(), msg.getdata());
         cout << "return :" << result << endl;
@@ -188,3 +215,12 @@ void WorkProcess(void *arg)
         tcp1.sendMsg(":" + result);
     }
 }
+
+
+    /*
+     struct stat file_stat;
+     if (stat(filepath.c_str(), &file_stat) == -1) {
+         cout << "Error getting file information." << endl;
+     }
+     cout << "total:" << file_stat.st_size << endl;
+     */

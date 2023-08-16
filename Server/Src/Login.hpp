@@ -20,4 +20,8 @@ string Apply(string name, string Oname);
 string gethiskey(string name1, string name2);
 //用户退出聊天界面
 string exitchat(string name1, string data);
+//接受文件
+string Recfile_info(string, string);
+// 发送文件
+string Sendfile_info(string, string);
 #endif

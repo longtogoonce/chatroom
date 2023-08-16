@@ -16,9 +16,11 @@ map<Protocol, string (*)(string, string)> funcMap = {
     {Packet_GetSetAll, &GetSetAll},
     {Packet_history, &history},
     {Packet_exitchat,&exitchat},
+    {Packet_sendfile,&Recfile_info},
+    {Packet_recivefile,&Sendfile_info},
 
     {Friend_Delete, &Fri_Delete},
-    {Friend_Black, &Fri_Black},
+    {Friend_Black, &Fri_Black}, 
     {Friend_NoBlack, &Fri_NoBlack},
     {Friend_ReApply, &Fri_ReApply},
     {Friend_GetAll, &Fri_GetAll},
@@ -34,6 +36,7 @@ map<Protocol, string (*)(string, string)> funcMap = {
 };
 
 map<string,pair<int,string>> Onlineuser;
+map<int, string> Onlinefile;
 
 void WorkProcess(void *arg);
 

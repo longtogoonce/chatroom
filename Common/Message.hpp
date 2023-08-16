@@ -18,6 +18,8 @@ typedef enum
     Packet_history = 10, // 获取key列表的所有元素
     Packet_GetSetAll = 11,  // 获取key集合中所有元素
     Packet_exitchat = 25,   //退出聊天
+    Packet_sendfile = 8,    //发送文件
+    Packet_recivefile = 9,  //接受文件
 
     User_Verify = 12,     // 验证用户
     User_FindPasswd = 13, // 找回密码
