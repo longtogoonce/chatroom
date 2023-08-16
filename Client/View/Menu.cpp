@@ -85,7 +85,7 @@ int main(int argc,char **argv)
 {
 
     signal(SIGINT, SIG_IGN);
-    /*
+    
     if(argc !=3){
         cout << "\t\t输入格式为: ./Client IP port " << endl;
     }
@@ -96,8 +96,8 @@ int main(int argc,char **argv)
         cout << "\t\t请输入正确的IP与PORT" << endl;
         return 0;
     }
-    */
-    Socketfd.ConnectToHost(IP, 9000);
+    
+    //Socketfd.ConnectToHost(IP, 9000);
     Main_Menu();
     return 0;
 }
