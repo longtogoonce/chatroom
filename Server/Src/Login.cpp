@@ -141,20 +141,22 @@ string history(string name,string Oname)
     //加入当前用户正在通信的名单
     Onlineuser[name].second = Oname;
     int type = redis.isSet("Groups", Oname);
-    string key;
-    if (type > 0)
-        key = gethiskey(Oname, "");
-    else
-        key = gethiskey(name, Oname);
     vector<string> history;
-    redisReply *reply = redis.getAlllist(key);
+    if(type > 0){
+        string key;
+        if (type > 0)
+            key = gethiskey(Oname, "");
+        else
+            key = gethiskey(name, Oname);
+        redisReply *reply = redis.getAlllist(key);
 
-    for (int i = 0; i < reply->elements; i++)
-    {
-        history.push_back(reply->element[i]->str);
+        for (int i = 0; i < reply->elements; i++)
+        {
+            history.push_back(reply->element[i]->str);
+        }
+        freeReplyObject(reply);
     }
     json Packet = history;
-    freeReplyObject(reply);
     return Packet.dump(3);
 }
 

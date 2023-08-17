@@ -83,13 +83,14 @@ int main()
                      Onlineuser.erase(it);
             }
             else if(Onlinefile.find(fd) != Onlinefile.end()){
-                string filename = Onlinefile[fd];
-                string filepath = FILEPATH + "/" + filename;
-                TcpSocket tcp1(fd);
-                tcp1.recvFile2(filepath);
-                Onlinefile.erase(fd);
-            }
-            else{
+                 epoll_ctl(epfd, EPOLL_CTL_DEL, fd, NULL);
+                 string filename = Onlinefile[fd];
+                 string filepath = FILEPATH + "/" + filename;
+                 TcpSocket tcp1(fd);
+                 tcp1.recvFile2(filepath);
+                 Onlinefile.erase(fd);
+                 epoll_ctl(epfd, EPOLL_CTL_ADD, fd, NULL);
+            } else {
                  Task task;
                  task.function = WorkProcess;
                  task.arg = &evs[i].data.fd;
