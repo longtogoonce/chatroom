@@ -13,7 +13,7 @@
 extern Redis redis;
 const string FILEPATH = "../My_File_Server";
 extern map<string, pair<int, string>> Onlineuser;
-extern map<int, string> Onlinefile;
+extern map<int, pair<string,off_t>> Onlinefile;
 
 string verify(string name,string data)
 {
@@ -187,7 +187,7 @@ string Recfile_info(string name, string data)
     string info = data.substr(pos + 1);
     File Curfile(info);
     int fd = Onlineuser[name].first;
-    Onlinefile.insert(make_pair(fd,Curfile.getname()));
+    Onlinefile.insert(make_pair(fd,make_pair(Curfile.getname(),Curfile.gettotalRecords())));
     int type = redis.addSet(dest + "L", Curfile.getname());
 
     //建立文件与目录

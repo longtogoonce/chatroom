@@ -83,13 +83,14 @@ int main()
                      Onlineuser.erase(it);
             }
             else if(Onlinefile.find(fd) != Onlinefile.end()){
-                 epoll_ctl(epfd, EPOLL_CTL_DEL, fd, NULL);
-                 string filename = Onlinefile[fd];
+                 string filename = Onlinefile[fd].first;
                  string filepath = FILEPATH + "/" + filename;
                  TcpSocket tcp1(fd);
-                 tcp1.recvFile2(filepath);
-                 Onlinefile.erase(fd);
-                epoll_ctl(epfd, EPOLL_CTL_ADD, fd, NULL);
+                 off_t total =  tcp1.recvFile2(filepath);
+                 cout << "Curtotal:" << total << endl;
+                 cout << "Total:" << Onlinefile[fd].second << endl;
+                 if (total == Onlinefile[fd].second)
+                     Onlinefile.erase(fd);
             } else {
                  Task task;
                  task.function = WorkProcess;
@@ -126,6 +127,7 @@ void WorkProcess(void *arg)
             stream.seekg(0, std::ios::end);
             tcp1.sendMsg("FILE:" + to_string(stream.tellg()));
             tcp1.sendFile(filepath, file.gettotalRecords());
+            stream.close();
         }
 
     } else if (msg.getprotocol() == Friend_Chat ||msg.getprotocol() == Group_Chat) {

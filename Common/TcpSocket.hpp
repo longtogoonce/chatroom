@@ -31,7 +31,7 @@ public:
     void sendFile(string filepath,off_t offset);
     string recvMsg();
     void recvFile(string filepath,off_t offset,off_t total);
-    void recvFile2(string filepath);
+    off_t recvFile2(string filepath);
 
     int getfd(){
         return socketfd;
@@ -159,7 +159,7 @@ inline void TcpSocket::recvFile(string filepath,off_t offset,off_t total)
     
 }
 
-inline void TcpSocket::recvFile2(string filepath){
+inline off_t TcpSocket::recvFile2(string filepath){
     ofstream putfile(filepath, ios::app);
     if (!putfile) {
         cout << "\t\t\t\t无法创建文件" << endl;
@@ -170,7 +170,12 @@ inline void TcpSocket::recvFile2(string filepath){
     while( (byte = recv(socketfd,buff,sizeof(buff),0))>0){
         putfile.write(buff, byte);
     }
+    ifstream outfile(filepath);
+    outfile.seekg(0, std::ios::end);
+    off_t total = outfile.tellg();
     putfile.close();
+    outfile.close();
+    return total;
 }
 
 inline int TcpSocket::readn(char* buf, int size)

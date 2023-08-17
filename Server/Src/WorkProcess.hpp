@@ -36,7 +36,7 @@ map<Protocol, string (*)(string, string)> funcMap = {
 };
 
 map<string,pair<int,string>> Onlineuser;
-map<int, string> Onlinefile;
+map<int, pair<string,off_t>> Onlinefile;
 
 void WorkProcess(void *arg);
 
