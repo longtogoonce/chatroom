@@ -26,6 +26,8 @@ int result1(Protocol protocol)
     temp = msgQueue.pop();
     if(!temp.compare("T"))
         return 1;
+    else if(!temp.compare("P"))
+        return -1;
     else
         return 0;
 }
@@ -101,24 +103,36 @@ void Friend_Srv_Apply()
 
 void Friend_Srv_Delete()
 {
-    if(result1(Friend_Delete))
-        cout << "\t\t好友删除成功" << endl;
+    int type = result1(Friend_Delete);
+    if(type==1)
+       cout << "\t\t好友删除成功" << endl;
+    else if(type==-1)
+       cout << "\t\t请不要拿自己的名字开玩笑" << endl;
     else
-        cout << "\t\t好友删除失败" << endl;
+       cout << "\t\t查无此人" << endl;
+    put.stdexit();
 }
 
 void Friend_Srv_Black()
 {
-    if(result1(Friend_Black))
-        cout << "\t\t成功加入黑名单" << endl;
+    int type = result1(Friend_Black);
+    if(type==1)
+       cout << "\t\t成功加入黑名单" << endl;
+    else if(type==-1)
+       cout << "\t\t请不要拿自己的名字开玩笑" << endl;
     else
-        cout << "\t\t加入黑名单失败" << endl;
+       cout << "\t\t加入黑名单失败" << endl;
+    put.stdexit();
 }
 
 void Friend_Srv_NoBlack()
 {
-    if(result1(Friend_NoBlack))
-        cout << "\t\t成功加入白名单" << endl;
+    int type = result1(Friend_NoBlack);
+    if(type==1)
+       cout << "\t\t成功解除拉黑" << endl;
+    else if(type==-1)
+       cout << "\t\t请不要拿自己的名字开玩笑" << endl;
     else
-        cout << "\t\t加入白名单失败" << endl;
+       cout << "\t\t解除拉黑失败" << endl;
+    put.stdexit();
 }

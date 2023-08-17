@@ -8,7 +8,11 @@ using json = nlohmann::json;
 
 string GroupCreat(string name ,string Gname)
 {
-    int type1 = redis.addkey(Gname,name);
+    int type = redis.isSet("Friends", Gname);
+    int type4 = redis.isSet("Groups", Gname);
+    if (type > 0 || type4 > 0 )
+        return string("P");
+    int type1 = redis.addkey(Gname, name);
     int type2 = redis.addSet(name + "C", Gname);
     int type3 = redis.addSet("Groups", Gname);
     if (type1 < 0 || type2 < 0 || type3 < 0 )

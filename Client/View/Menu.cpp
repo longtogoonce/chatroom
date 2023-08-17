@@ -106,7 +106,6 @@ void ReadThreadFromeTcp()
 {
     while(1){
        if(RecState){
-        cout << "file:" << RecFile.getname() << endl;
         Socketfd.recvFile(RecFile.getname(),RecFile.getoffset(),RecFile.gettotalRecords());
         RecState = 0;
         put.stdexit();
@@ -116,7 +115,6 @@ void ReadThreadFromeTcp()
             RecState = 1;
             auto pos = buf.find(":");
             RecFile.settotal(buf.substr(pos + 1));
-            cout << "total:" << buf.substr(pos + 1) << endl;
         } else {
             cout << "\n";
             auto pos = buf.find(":");

@@ -39,7 +39,7 @@ int main()
             if(fd == server.getfd()){
 
                 TcpSocket* New = server.acceptConnect();
-                New->toNoBlack();
+                New->toNoBlack(); 
 
                 /*   // 开启保活，1分钟内探测不到，断开连接
                    int keep_alive = 1;
@@ -82,11 +82,18 @@ int main()
                  if (it != Onlineuser.end())
                      Onlineuser.erase(it);
             }
+            else if(Onlinefile.find(fd) != Onlinefile.end()){
+                string filename = Onlinefile[fd];
+                string filepath = FILEPATH + "/" + filename;
+                TcpSocket tcp1(fd);
+                tcp1.recvFile2(filepath);
+                Onlinefile.erase(fd);
+            }
             else{
-                Task task;
-                task.function = WorkProcess;
-                task.arg = &evs[i].data.fd;
-                threadpool.addTask(task);
+                 Task task;
+                 task.function = WorkProcess;
+                 task.arg = &evs[i].data.fd;
+                 threadpool.addTask(task);
             }
         }
     }
@@ -98,15 +105,6 @@ void WorkProcess(void *arg)
     int *temp = (int *)arg;
     int src = temp[0];
     TcpSocket tcp1(src);
-    if (Onlinefile.find(src) != Onlinefile.end()){
-        string filename = Onlinefile[src];
-        string filepath = FILEPATH + "/" + filename;
-        cout << "file:" << filepath <<endl;
-        tcp1.recvFile2(filepath);
-        Onlinefile.erase(src);
-        return;
-    }
-
     string buf = tcp1.recvMsg();
     Message msg(buf);
 
@@ -129,13 +127,18 @@ void WorkProcess(void *arg)
             tcp1.sendFile(filepath, file.gettotalRecords());
         }
 
-    } else if (msg.getprotocol() == Friend_Chat ||
-               msg.getprotocol() == Group_Chat) {
+    } else if (msg.getprotocol() == Friend_Chat ||msg.getprotocol() == Group_Chat) {
+
         string key;
         vector<string> number;
         if(msg.getprotocol()==Friend_Chat){
-            key = gethiskey(msg.getname(), msg.getdest());
-            number.push_back(msg.getdest());
+            
+            //判断是否是好友
+            int type1 = redis.isSet(msg.getname() + "F", msg.getdest());
+            if(type1 <= 0){
+                tcp1.sendMsg("OFF:You are not friends yet!!!");
+                return;
+            }
 
             //是否被拉黑
             int type = redis.isSet(msg.getdest() + "B", msg.getname());
@@ -143,8 +146,12 @@ void WorkProcess(void *arg)
                 tcp1.sendMsg("OFF:You've been blocked!!!");
                 return;
             }
+
+            key = gethiskey(msg.getname(), msg.getdest());
+            number.push_back(msg.getdest());
+
         }else{
-            key = gethiskey(msg.getname(), "");
+            key = gethiskey(msg.getdest(), "");
             number = getGroupNumber(msg.getdest(),msg.getname());
         }
         redis.addList(key, msg.getname() + ":" + msg.getdata());
@@ -153,7 +160,12 @@ void WorkProcess(void *arg)
             if (Onlineuser.find(ptr) != Onlineuser.end()){
                 int dest = Onlineuser[ptr].first;
                 TcpSocket tcp(dest);
-                string name = Onlineuser[msg.getdest()].second; // 当前用户正在通信的用户
+                string name = Onlineuser[ptr].second; // 当前用户正在通信的用户
+                if(redis.isSet("Groups", name) >0){
+                     string name1 = Onlineuser[msg.getname()].second;
+                     if(!name1.compare(name))
+                         name = msg.getname();
+                }
                 if (!name.compare(msg.getname()))
                      tcp.sendMsg("ON:" + msg.getname() + "+" + msg.getdata());
                 else
@@ -163,7 +175,7 @@ void WorkProcess(void *arg)
         //既有任务的处理又有对不同身份人的消息发送
     } else if (msg.getprotocol() < 10) {
         vector<string> number;
-        cout << "protocol: " << msg.getprotocol() << " name: " << msg.getname() << " Fname: " << msg.getdest() << " data: " << msg.getdata() << endl;
+        cout << "protocol: " << msg.getprotocol() << " name: " << msg.getname() << " Fname: " << msg.getdest() << " data: " << msg.getdata() <<endl;
         string result = funcMap[msg.getprotocol()](msg.getname(), msg.getdest()+":"+msg.getdata());
         cout << "return :" << result << endl;
         tcp1.sendMsg(":"+result);
@@ -215,12 +227,3 @@ void WorkProcess(void *arg)
         tcp1.sendMsg(":" + result);
     }
 }
-
-
-    /*
-     struct stat file_stat;
-     if (stat(filepath.c_str(), &file_stat) == -1) {
-         cout << "Error getting file information." << endl;
-     }
-     cout << "total:" << file_stat.st_size << endl;
-     */

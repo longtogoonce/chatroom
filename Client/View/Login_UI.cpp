@@ -77,7 +77,9 @@ int Login()
     cout << "\t\t\t\t请输入你的账户名称:";
     cin >> name;
     cout << "\n\t\t\t\t请输入你的密码:";
+    system("stty -echo");
     cin >> passwd;
+    system("stty echo");
     int temp = Login_Srv_Verify(name, passwd);
     if(temp == 1)
         return 1;
@@ -126,10 +128,14 @@ void Sign()
     do
     {
         cout << "\t\t\t\t\t\t*请输入你的密码：";
+        system("stty -echo");
         cin >> passwd1;
+        system("stty echo");
         cout << endl;
         cout << "\t\t\t\t\t\t*请再次输入你的密码：";
+        system("stty -echo");
         cin >> passwd2;
+        system("stty echo");
         cout << endl;
     } while (passwd2.compare(passwd1));
     user.setpasswd(passwd2);
@@ -172,16 +178,7 @@ void FindPassword()
         cin >> name;
         cout << "\t\t\t\t请输入密保:";
         cin >> myitbo;
-        if (Login_Srv_FindPasswd(name, myitbo, passwd))
-        {
-        cout << "\n\t\t\t\t你的密码是:";
-        put.printFromLeft(passwd, yellow, B_empty, underscore);
-        }
-        else
-        {
-        cout << "\n\t\t\t\t验证失败" << endl;
-        }
-        put.stdexit();
+        Login_Srv_FindPasswd(name, myitbo);
 }
 
 void Send_File_MgtEntry()

@@ -11,20 +11,16 @@ extern map<string, int> Onlineuser;
 
 string Fri_Delete(string name, string Fname)
 {
+    if(!name.compare(Fname))
+        return string("P");
+    int type = redis.isSet("Friends", Fname);
+    if(type <=0)
+        return string("F");
     int type1 = redis.delSet(name + "F", Fname);
     int type2 = redis.delSet(Fname + "F", name);
     int type3 = redis.delSet(name + "B", Fname);
     int type4 = redis.delSet(Fname + "B", name);
     if (type1 < 0|| type2 <0 || type3 <0 || type4 <0)
-        return string("F");
-    else
-        return string("T");
-}
-
-string Fri_Query(string name,string Fname)
-{
-    int type = redis.isSet(name + "F", Fname);
-    if(type <0)
         return string("F");
     else
         return string("T");
@@ -55,8 +51,10 @@ string Fri_GetAll(string name,string fname="")
 
 string Fri_Black(string name, string Fname)
 {
+    if(!name.compare(Fname))
+        return string("P");
     int type = redis.delSet(name + "B", Fname);
-    if(type <0)
+    if(type <=0)
         return string("F");
     else
         return string("T");
@@ -64,8 +62,10 @@ string Fri_Black(string name, string Fname)
 
 string Fri_NoBlack(string name, string Fname)
 {
+    if(!name.compare(Fname))
+        return string("P");
     int type = redis.addSet(name + "B", Fname);
-    if(type <0)
+    if(type <=0)
         return string("F");
     else
         return string("T");

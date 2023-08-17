@@ -6,6 +6,7 @@
 #include "../../Common/Redis.hpp"
 #include "../../Common/TcpSocket.hpp"
 #include "../../Common/Account.hpp"
+#include "../Persistence/Group.hpp"
 #include <map>
 #include <string>
 
@@ -18,7 +19,9 @@ string verify(string name,string data)
 {
     int type = redis.isKey(name);
     if(type <=0)
-        return string("F");
+      return string("F");
+    if (Onlineuser.find(name) != Onlineuser.end())
+      return string("P");
     string passwd = redis.getHash(name, "passwd");
     if (!data.compare(passwd))
         return string("T");
@@ -37,7 +40,10 @@ string Apply(string name, string data)
     if (type1 <= 0 && type2 <= 0)
         return string("P"); //账户不存在
     int type5 = redis.isSet(name + "F", Oname);
-    if(type5 >0)
+    int type6 = redis.isSet(name + "C", Oname);
+    int type7 = redis.isSet(name + "M", Oname);
+    int type8 = redis.isSet(name + "A", Oname);
+    if (type5 > 0 || type6 > 0 || type7 >0 || type8 >0)
         return string("A");//已经是好友了
     int type3 = redis.isSet(Oname + "Q", name);
     if (type3>0)
@@ -51,6 +57,9 @@ string Apply(string name, string data)
 
 string findpasswd(string name,string data)
 {
+    int type1 = redis.isSet("Friends", name);
+    if (type1 <= 0)
+        return string("P");
     string myitbo = redis.getHash(name, "myitbo");
     if(!myitbo.compare(data))
     {
@@ -63,27 +72,55 @@ string findpasswd(string name,string data)
 
 string UserCreat(string name, string data)
 {
-    int type = redis.isSet("Friends", name);
-    if(type >0)
+    int type1 = redis.isSet("Friends", name);
+    int type2 = redis.isSet("Groups",name);
+    if(type1 >0 || type2 >0)
         return string("P");
     Account user(data);
-    int type1 = redis.setHash(name, "name", user.getname());
-    int type2 = redis.setHash(name, "passwd", user.getpasswd());
-    int type3 = redis.setHash(name, "myitbo", user.getmyitbo());
-    int type4 = redis.addSet("Friends", name);
-    if ((type1 < 0) && (type2 < 0) && (type3 < 0))
+    int type3 = redis.setHash(name, "name", user.getname());
+    int type4 = redis.setHash(name, "passwd", user.getpasswd());
+    int type5 = redis.setHash(name, "myitbo", user.getmyitbo());
+    int type6 = redis.addSet("Friends", name);
+    if ((type3 < 0) && (type4 < 0) && (type5 < 0))
         return string("F");
     else
         return string("T");
 }
 
-string UserDelete(string name,string data="")
+string UserDelete(string name, string data = "")
 {
-    int type = redis.delAll(name);
-    if(type<0)
-        return string("F");
-    else
-        return string("T");
+    //将用户的所有数据都删除
+    redis.delkey(name);
+    redis.delkey(name + "Q");
+
+    redisReply *replyC = redis.getAllSet(name + "C");
+    for (int i = 0; i < replyC->elements; i++)
+    {
+        string Gname = replyC->element[i]->str;
+        GroupDelete(name, Gname);
+    }
+    freeReplyObject(replyC);
+    redisReply *replyM = redis.getAllSet(name + "M");
+    for (int i = 0; i < replyM->elements; i++)
+    {
+        string Gname = replyM->element[i]->str;
+        GroupDelete(name, Gname);
+    }
+    freeReplyObject(replyM);
+    redisReply *replyA = redis.getAllSet(name + "A");
+    for (int i = 0; i < replyA->elements; i++)
+    {
+        string Gname = replyA->element[i]->str;
+        GroupDelete(name, Gname);
+    }
+    freeReplyObject(replyA);
+    redis.delkey(name + "C");
+    redis.delkey(name + "M");
+    redis.delkey(name + "A");
+    redis.delkey(name + "B");
+    redis.delkey(name + "F");
+    redis.delkey(name + "L");
+    return string("T");
 }
 
 string GetSetAll(string name,string temp = "")
@@ -99,17 +136,16 @@ string GetSetAll(string name,string temp = "")
     return Packet.dump(3);
 }
 
-string history(string name,string data)
+string history(string name,string Oname)
 {
-    //判断是否是好友
-    int type = redis.isSet(name + "F",data);
-    if(type <= 0)
-        return string("F");
-
     //加入当前用户正在通信的名单
-    Onlineuser[name].second = data;
-
-    string key = gethiskey(name, data);
+    Onlineuser[name].second = Oname;
+    int type = redis.isSet("Groups", Oname);
+    string key;
+    if (type > 0)
+        key = gethiskey(Oname, "");
+    else
+        key = gethiskey(name, Oname);
     vector<string> history;
     redisReply *reply = redis.getAlllist(key);
 

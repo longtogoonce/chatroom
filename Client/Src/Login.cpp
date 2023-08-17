@@ -49,18 +49,21 @@ void Login_Srv_Add(Account user)
     put.stdexit();
 }
 
-int Login_Srv_FindPasswd(string name,string myitbo,string& passwd)
+void Login_Srv_FindPasswd(string name,string myitbo)
 {
     Message msg(User_FindPasswd, name, "", myitbo);
     string temp = msg.tojson();
     Socketfd.sendMsg(temp);
     temp = msgQueue.pop();
-    if(!temp.compare(myitbo)){
-        passwd = temp;
-        return 1;
+    if (!temp.compare("P"))
+        cout << "\t\t\t\t\t\t\t请输入正确的名称" << endl;
+    else if(!temp.compare("F"))
+        cout << "\t\t\t\t验证失败" << endl;
+    else{
+        cout << "\n\t\t\t\t你的密码是:";
+        put.printFromLeft(temp, yellow, B_empty, underscore);
     }
-    else
-        return 0;
+    put.stdexit();
 }
 
 int DelAccount()
@@ -104,10 +107,13 @@ void Send_File(string file_path, string dest_name)
 
         while (offset< file.gettotalRecords()) {
             ssize_t sent_bytes = sendfile(Socketfd.getfd(), fd, &offset,file.gettotalRecords()-offset);
-            offset += sent_bytes;
             if (sent_bytes == -1) {
-                cout << "\t\t发送文件失败" << endl;
-                break;
+                if(errno == EAGAIN || errno == EOWNERDEAD){
+                    continue;
+                } else {
+                    cout << "\t\t发送文件失败" << endl;
+                    break;
+                }
             }
 
               float progress = static_cast<float>(offset) / file.gettotalRecords();

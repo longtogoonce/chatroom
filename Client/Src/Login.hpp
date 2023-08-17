@@ -9,7 +9,7 @@ int Login_Srv_Verify(std::string UID, std::string passwd);
 //添加用户
 int Login_Srv_Add(Account user);
 //找回密码
-int Login_Srv_FindPasswd(std::string name,std::string myitbo,std::string& passwd);
+void Login_Srv_FindPasswd(std::string name,std::string myitbo);
 //删除用户
 int DelAccount();
 //发送文件

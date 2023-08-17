@@ -101,6 +101,8 @@ void Group_Srv_CreatGroup()
     temp = msgQueue.pop();
     if(!temp.compare("T"))
         cout << "\t\t群创建成功" << endl;
+    else if(!temp.compare("P"))
+        cout << "\t\t该名称已经存在" << endl;
     else
         cout << "\t\t群创建失败" << endl;
     put.stdexit();

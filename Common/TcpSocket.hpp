@@ -105,10 +105,16 @@ inline void TcpSocket::sendFile(string filepath,off_t offset)
      while (offset < total) {
          off_t sent_bytes = sendfile(socketfd, fd, &offset, total - offset);
          if (sent_bytes == -1) {
-             cout << "\t\t发送文件失败" << endl;
-             break;
+             if (errno == EAGAIN || errno == EWOULDBLOCK){
+                continue;
+             }else{
+                cout << "sentfile error" << endl;
+                break;
+             }
          }
     }
+    //int size = write(socketfd, "OVER", 4);
+    //cout << "size:" << size << endl;
 }
 
 inline string TcpSocket::recvMsg()
@@ -139,13 +145,15 @@ inline void TcpSocket::recvFile(string filepath,off_t offset,off_t total)
         cout << "\t\t\t\t无法创建文件" << endl;
     }
   //接受文件
-    char buff[10240];
+    char buff[1024000];
     ssize_t byte;
-    while(offset < total){
+    offset = 0;
+    while (offset < total) {
         byte = recv(socketfd, buff, sizeof(buff), 0);
-        cout << "byte:" << byte << endl;
         putfile.write(buff, byte);
-        offset += total;
+        offset += byte;
+        if(offset==total)
+             break;
     }
     putfile.close();
     
@@ -157,7 +165,7 @@ inline void TcpSocket::recvFile2(string filepath){
         cout << "\t\t\t\t无法创建文件" << endl;
     }
     //接受文件
-    char buff[10240];
+    char buff[102400];
     ssize_t byte;
     while( (byte = recv(socketfd,buff,sizeof(buff),0))>0){
         putfile.write(buff, byte);
