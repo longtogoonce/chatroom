@@ -74,18 +74,20 @@ void Group_Srv_AddGroup()
     put.stdexit();
 }
 
-void Group_Srv_ExitGroup(string Gname)
+int Group_Srv_ExitGroup(string Gname)
 {
   
     Message msg(Group_Exit, Curuser.getname(), "",Gname);
     string temp = msg.tojson();
     Socketfd.sendMsg(temp);
     temp = msgQueue.pop();
-    if(!temp.compare("T"))
+    if(!temp.compare("T")){
         cout << "\t\t群退出成功" << endl;
-    else
+        return 1;
+    } else
         cout << "\t\t群退出失败" << endl;
     put.stdexit();
+    return 0;
 }
 
 void Group_Srv_CreatGroup()
@@ -108,20 +110,23 @@ void Group_Srv_CreatGroup()
     put.stdexit();
 }
 
-void Group_Srv_DelGroup(string Gname)
+int Group_Srv_DelGroup(string Gname)
 {
 
     Message msg(Group_Delete, Curuser.getname(), "",Gname);
     string temp = msg.tojson();
     Socketfd.sendMsg(temp);
     temp = msgQueue.pop();
-    if(!temp.compare("T"))
+    if(!temp.compare("T")){
         cout << "\t\t该群已经删除成功" << endl;
+        return 1;
+    }
     else if (!temp.compare("P"))
         cout << "\t\t你没有操作权限" << endl;
     else
         cout << "\t\t群删除失败" << endl;
-    put.stdexit();
+    put.stdexit();    
+    return 0;
 }
 
 void Group_Srv_Deluser(string Gname)

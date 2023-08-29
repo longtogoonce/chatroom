@@ -139,11 +139,13 @@ void Group_UI_MgtEntry()
                 break;
             case 'S':
             case 's':
-                Group_Srv_ExitGroup(name);
+                if(Group_Srv_ExitGroup(name))
+                    return;
                 break;
             case 'G':
             case 'g':
-                Group_Srv_DelGroup(name);
+                if(Group_Srv_DelGroup(name))
+                    return;
                 break;
             }
     } while ('E' != choice && 'e' != choice);
@@ -188,6 +190,11 @@ void Group_UI_ChatEntry()
     cin >> Gname;
     cout << endl;
     vector<string> history = Group_Srv_history(Gname);
+    if(!history[0].compare("F")){
+        cout << "\t\t该群不存在" << endl;
+        put.stdexit();
+        return;
+    }
 
     system("clear");
     for(auto& str :history){
@@ -215,6 +222,8 @@ void Group_UI_ChatEntry()
         if(!data.compare("q"))
             break;
         cout << "\033[1A\033[K";
+        cin.clear();
+        cin.ignore(numeric_limits<streamsize>::max(), '\n');
         put.printFromRight(Curuser.getname(),color_empty,B_empty,type_empty);
         put.printFromRight(data,black,B_white,highlight);
 

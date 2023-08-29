@@ -85,6 +85,11 @@ void Friend_UI_Chat()
     cin >> name;
     cout << endl;
     vector<string> history = Friend_Srv_history(name);
+     if(!history[0].compare("F")){
+        cout << "\t\t你们还不是好友" << endl;
+        put.stdexit();
+        return;
+    }
 
     system("clear");
     for(auto& str :history){
@@ -112,7 +117,9 @@ void Friend_UI_Chat()
         if(!data.compare("q"))
             break;
         cout << "\033[1A\033[K";
-        put.printFromRight(Curuser.getname(),color_empty,B_empty,type_empty);
+        cin.clear();
+        cin.ignore(numeric_limits<streamsize>::max(), '\n');
+        put.printFromRight(Curuser.getname(), color_empty, B_empty, type_empty);
         put.printFromRight(data,black,B_white,highlight);
 
         Message msg(Friend_Chat, Curuser.getname(), name, data);

@@ -8,11 +8,11 @@ using namespace std;
 // 创建群组
 void Group_Srv_CreatGroup();
 //解散群组
-void Group_Srv_DelGroup(string name);
+int Group_Srv_DelGroup(string name);
 //加入群组
 void Group_Srv_AddGroup();    
 //退出群组
-void Group_Srv_ExitGroup(string name);
+int Group_Srv_ExitGroup(string name);
 //获取群列表
 vector<string> Group_Srv_GetList(string name);
 //查看群聊申请
