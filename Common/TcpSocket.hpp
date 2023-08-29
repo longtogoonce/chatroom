@@ -104,6 +104,9 @@ inline void TcpSocket::sendFile(string filepath,off_t offset)
 
      while (offset < total) {
          off_t sent_bytes = sendfile(socketfd, fd, &offset, total - offset);
+         cout << "sent_byte:" << sent_bytes << endl;
+         cout << "offset:" << offset << endl;
+         cout << "total:" << total << endl;
          if (sent_bytes == -1) {
              if (errno == EAGAIN || errno == EWOULDBLOCK){
                 continue;
@@ -113,8 +116,6 @@ inline void TcpSocket::sendFile(string filepath,off_t offset)
              }
          }
     }
-    //int size = write(socketfd, "OVER", 4);
-    //cout << "size:" << size << endl;
 }
 
 inline string TcpSocket::recvMsg()
@@ -193,8 +194,12 @@ inline int TcpSocket::readn(char* buf, int size)
         }
         else if (nread == -1)
         {
-            //cout << "Rerrno:" << strerror(errno) << endl;
-            return -1;
+            if(errno == EAGAIN || errno == EOWNERDEAD){
+                    continue;
+                } else {
+                    cout << "\t\t发送失败" << endl;
+                    break;
+                }
         }
     }
     return size;
@@ -215,8 +220,11 @@ inline int TcpSocket::writen(char* msg, int size)
         }
         else if (nwrite == -1)
         {
-            cout << "Werrno:" << strerror(errno) << endl;
-            return -1;
+           if(errno == EAGAIN || errno == EOWNERDEAD){
+                    continue;
+                } else {
+                    break;
+                }
         }
     }
     return size;
